@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Button,
   ChevronIcon,
@@ -7,6 +7,7 @@ import {
   Group,
   NativeSelect,
   Radio,
+  Space,
   Stack,
   Text,
   Textarea,
@@ -16,13 +17,15 @@ import {
   rem,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import namesByCountryMap from "../data/names-by-country.json";
-import { getAppleDeviceName, testNames } from "../detector";
+import nameMap from "../data/names-by-country.json";
 import { Dots } from "./Dots/Dots";
+import { getPossibleAppleDeviceMdnsBaseNames } from "../detection/device";
+import { useLocalStorageFormCache } from "../hooks/form";
+import { resolveLocalHostnamesWithFetch } from "../detection/fetch";
 
-type CountryCode = keyof typeof namesByCountryMap;
+type CountryCode = keyof typeof nameMap;
 
-const countryCodes = Object.keys(namesByCountryMap) as CountryCode[];
+const countryCodes = Object.keys(nameMap) as CountryCode[];
 
 const useStyles = createStyles((theme) => ({
   inner: {
@@ -71,28 +74,67 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
+const NAME_PLACEHOLDER_TOKEN = "<name>";
+
+// TODO: use IP location
+const defaultCountryCode = countryCodes[0];
+const defaultGender = "male_names" as const;
+const deviceBaseNames = getPossibleAppleDeviceMdnsBaseNames();
+const formInitialValues = {
+  countryCode: defaultCountryCode,
+  names: "",
+  gender: defaultGender,
+  patterns: deviceBaseNames
+    .flatMap((deviceName) => [
+      `${NAME_PLACEHOLDER_TOKEN}s-${deviceName}.local`,
+      `${deviceName}-${NAME_PLACEHOLDER_TOKEN}.local`,
+      `${deviceName}.local`,
+    ])
+    .join("\n"),
+};
+
 export default function App() {
   const { classes } = useStyles();
 
+  const [isProcessing, setProcessing] = useState(false);
+  const [detectedNames, setDetectedNames] = useState<null | string[]>(null);
   const [isAdvancedSettingsShowed, setAdvancedSettings] = useState(false);
   const toggleAdvancedSettings = () => setAdvancedSettings((state) => !state);
 
-  const form = useForm({
-    initialValues: {
-      countryCode: countryCodes[0],
-      gender: "male_names" as const,
-      patterns: "<name>-macbook-pro.local",
-      names: namesByCountryMap[countryCodes[0]]["male_names"].join("\n"),
-    },
-  });
+  const form = useForm({ initialValues: formInitialValues });
+  useLocalStorageFormCache(form, "user-form");
+
+  useEffect(() => {
+    const { countryCode, gender } = form.values;
+    form.setFieldValue("names", nameMap[countryCode][gender].join("\n"));
+  }, [form.values.countryCode, form.values.gender]);
 
   const handleSubmit = useCallback(async () => {
-    // setDetecting(true);
-    const result = await testNames(
-      namesByCountryMap[form.values.countryCode][form.values.gender]
+    const patterns = form.values.patterns.split("\n");
+    const names = form.values.names.split("\n");
+
+    const mdnsCandidates = patterns.flatMap((pattern) =>
+      pattern.includes(NAME_PLACEHOLDER_TOKEN)
+        ? names.map((name) =>
+            pattern.replaceAll(NAME_PLACEHOLDER_TOKEN, name).toLowerCase()
+          )
+        : pattern.toLowerCase()
     );
-    console.log(result);
-  }, [form]);
+
+    setProcessing(true);
+
+    const detected = await resolveLocalHostnamesWithFetch(mdnsCandidates);
+
+    setDetectedNames(detected);
+    setProcessing(false);
+
+    if (detected.length > 0) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [form, setProcessing]);
+
+  if (detectedNames !== null) {
+  }
 
   return (
     <Stack mih="100%" pos="relative" py="80px" px="md" justify="center">
@@ -119,13 +161,36 @@ export default function App() {
           </Text>
         </Container>
 
+        {detectedNames !== null && detectedNames.length <= 10 && (
+          <>
+            <Space h="80px" />
+            <Title className={classes.title} mb="lg">
+              Your Name Is:
+            </Title>
+            {detectedNames.map((it) => (
+              <Title
+                className={classes.title}
+                size="xs"
+                variant="gradient"
+                gradient={{ from: "blue", to: "cyan" }}
+                inherit
+                mb="lg"
+              >
+                {it}
+              </Title>
+            ))}
+
+            <Space h="80px" />
+          </>
+        )}
+
         <form className={classes.form} onSubmit={form.onSubmit(handleSubmit)}>
           <Group>
             <NativeSelect
               label="Name Origin"
               data={countryCodes.map((it) => ({
                 value: it,
-                label: `${namesByCountryMap[it].emoji} ${namesByCountryMap[it].name}`,
+                label: `${nameMap[it].emoji} ${nameMap[it].name}`,
               }))}
               error={form.errors.countryCode}
               className={classes.primaryInput}
@@ -136,7 +201,7 @@ export default function App() {
               data={[
                 { value: "male_names", label: "🙎‍♂️ Male" },
                 { value: "female_names", label: "🙎‍♀️ Female" },
-                { value: "neutral", label: "👤 Neutral" },
+                { value: "neutral", label: "👤 Neutral", disabled: true },
               ]}
               className={classes.primaryInput}
               error={form.errors.gender}
@@ -159,11 +224,11 @@ export default function App() {
               label="Detection Method"
               description="Availability depends on the browser"
               mt="xl"
-              value="webrtc"
+              value="fetch"
             >
               <Group mt="xs">
-                <Radio value="webrtc" label="WebRTC" />
                 <Radio value="fetch" label="fetch" />
+                <Radio value="webrtc" label="WebRTC" disabled />
                 <Radio value="iframe" label="iframe" disabled />
               </Group>
             </Radio.Group>
@@ -192,6 +257,7 @@ export default function App() {
               label="Names To Check"
               placeholder={"John\nKevin\nAlex"}
               minRows={10}
+              disabled={!form.values.patterns.includes("<name>")}
               {...form.getInputProps("names")}
             />
           </Collapse>
@@ -201,7 +267,7 @@ export default function App() {
             type="submit"
             size="lg"
             loaderPosition="right"
-            loading={true}
+            loading={isProcessing}
           >
             Guess My Name
           </Button>
