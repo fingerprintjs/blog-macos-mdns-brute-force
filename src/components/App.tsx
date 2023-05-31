@@ -22,6 +22,9 @@ import { Dots } from "./Dots/Dots";
 import { getPossibleAppleDeviceMdnsBaseNames } from "../detection/device";
 import { useLocalStorageFormCache } from "../hooks/form";
 import { resolveLocalHostnamesWithFetch } from "../detection/fetch";
+import { MDNSCandidate, ResolvedHostname } from "../detection/types";
+import { resolveLocalHostnamesWithWebRTC } from "../detection/webrtc";
+import { resolveLocalHostnamesWithIframe } from "../detection/iframe";
 
 type CountryCode = keyof typeof nameMap;
 
@@ -76,6 +79,12 @@ const useStyles = createStyles((theme) => ({
 
 const NAME_PLACEHOLDER_TOKEN = "<name>";
 
+const resolvers = {
+  webrtc: resolveLocalHostnamesWithWebRTC,
+  fetch: resolveLocalHostnamesWithFetch,
+  iframe: resolveLocalHostnamesWithIframe,
+};
+
 // TODO: use IP location
 const defaultCountryCode = countryCodes[0];
 const defaultGender = "male_names" as const;
@@ -91,13 +100,16 @@ const formInitialValues = {
       `${deviceName}.local`,
     ])
     .join("\n"),
+  detectionMethod: "fetch" as keyof typeof resolvers,
 };
 
 export default function App() {
   const { classes } = useStyles();
 
   const [isProcessing, setProcessing] = useState(false);
-  const [detectedNames, setDetectedNames] = useState<null | string[]>(null);
+  const [detectedNames, setDetectedNames] = useState<null | ResolvedHostname[]>(
+    null
+  );
   const [isAdvancedSettingsShowed, setAdvancedSettings] = useState(false);
   const toggleAdvancedSettings = () => setAdvancedSettings((state) => !state);
 
@@ -113,17 +125,22 @@ export default function App() {
     const patterns = form.values.patterns.split("\n");
     const names = form.values.names.split("\n");
 
-    const mdnsCandidates = patterns.flatMap((pattern) =>
+    const mdnsCandidates: MDNSCandidate[] = patterns.flatMap((pattern) =>
       pattern.includes(NAME_PLACEHOLDER_TOKEN)
-        ? names.map((name) =>
-            pattern.replaceAll(NAME_PLACEHOLDER_TOKEN, name).toLowerCase()
-          )
-        : pattern.toLowerCase()
+        ? names.map((name) => ({
+            firstName: name,
+            hostname: pattern
+              .replaceAll(NAME_PLACEHOLDER_TOKEN, name)
+              .toLowerCase(),
+          }))
+        : { hostname: pattern.toLowerCase() }
     );
 
     setProcessing(true);
 
-    const detected = await resolveLocalHostnamesWithFetch(mdnsCandidates);
+    const detected = await resolvers[form.values.detectionMethod](
+      mdnsCandidates
+    );
 
     setDetectedNames(detected);
     setProcessing(false);
@@ -175,8 +192,11 @@ export default function App() {
                 gradient={{ from: "blue", to: "cyan" }}
                 inherit
                 mb="lg"
+                key={it.hostname}
               >
-                {it}
+                Hi, {it.firstName}
+                <br />
+                {it.hostname}
               </Title>
             ))}
 
@@ -220,16 +240,16 @@ export default function App() {
 
           <Collapse in={isAdvancedSettingsShowed}>
             <Radio.Group
-              name="detectionMetthod"
+              name="detectionMethod"
               label="Detection Method"
               description="Availability depends on the browser"
               mt="xl"
-              value="fetch"
+              {...form.getInputProps("detectionMethod")}
             >
               <Group mt="xs">
                 <Radio value="fetch" label="fetch" />
-                <Radio value="webrtc" label="WebRTC" disabled />
-                <Radio value="iframe" label="iframe" disabled />
+                <Radio value="webrtc" label="WebRTC" />
+                <Radio value="iframe" label="iframe" />
               </Group>
             </Radio.Group>
 

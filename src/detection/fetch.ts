@@ -1,27 +1,40 @@
-export async function resolveLocalHostnamesWithFetch(candidates: string[]) {
-  const concurrencyLimit = 50;
-  const detectedNames: string[] = [];
+import { ResolvedHostname, MDNSResolver } from "./types";
 
-  for (let i = 0; i < candidates.length; i += concurrencyLimit) {
-    const chunk = candidates.slice(i, i + concurrencyLimit);
+const FETCH_CONCURRENCY_LIMIT = 50;
+const FETCH_RESOLVE_TIMEOUT = 700;
+
+export const resolveLocalHostnamesWithFetch: MDNSResolver = async (
+  candidates
+) => {
+  const resolvedHostnames: ResolvedHostname[] = [];
+
+  for (let i = 0; i < candidates.length; i += FETCH_CONCURRENCY_LIMIT) {
+    const chunk = candidates.slice(i, i + FETCH_CONCURRENCY_LIMIT);
     const abortController = new AbortController();
+    const start = performance.now();
 
     setTimeout(() => {
       abortController.abort();
-    }, 1000);
+    }, FETCH_RESOLVE_TIMEOUT);
 
     await Promise.all(
-      chunk.map((hostname) =>
+      chunk.map(({ firstName, hostname }) =>
         fetch(`https://${hostname}/`, { signal: abortController.signal })
-          .then(() => detectedNames.push(hostname))
+          .then(() => {
+            throw new Error();
+          })
           .catch((error) => {
             if (error.name !== "AbortError") {
-              detectedNames.push(hostname);
+              resolvedHostnames.push({
+                firstName,
+                hostname,
+                ping: performance.now() - start,
+              });
             }
           })
       )
     );
   }
 
-  return detectedNames;
-}
+  return resolvedHostnames.sort((a, b) => a.ping - b.ping);
+};
