@@ -1,6 +1,6 @@
 import { ResolvedHostname, MDNSResolver, MDNSCandidate } from "./types";
 
-const WEBRTC_TIMEOUT = 100000;
+const WEBRTC_TIMEOUT = 5000;
 
 export const resolveLocalHostnamesWithWebRTC: MDNSResolver = async (
   mdnsCandidates
