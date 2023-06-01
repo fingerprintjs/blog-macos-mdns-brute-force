@@ -4,7 +4,8 @@ const FETCH_CONCURRENCY_LIMIT = 50;
 const FETCH_RESOLVE_TIMEOUT = 700;
 
 export const resolveLocalHostnamesWithFetch: MDNSResolver = async (
-  candidates
+  candidates,
+  onCandidateFound
 ) => {
   const resolvedHostnames: ResolvedHostname[] = [];
 
@@ -25,11 +26,17 @@ export const resolveLocalHostnamesWithFetch: MDNSResolver = async (
           })
           .catch((error) => {
             if (error.name !== "AbortError") {
-              resolvedHostnames.push({
+              const candidate = {
                 firstName,
                 hostname,
                 ping: performance.now() - start,
-              });
+              };
+
+              resolvedHostnames.push(candidate);
+
+              if (onCandidateFound) {
+                onCandidateFound(candidate);
+              }
             }
           })
       )

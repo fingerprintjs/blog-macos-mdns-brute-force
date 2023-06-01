@@ -22,3 +22,22 @@ export function getPossibleAppleDeviceMdnsBaseNames(): string[] {
       return ["macbook-pro", "macbook-air", "imac", "mac-mini", "mac"];
   }
 }
+
+export function isGecko(): boolean {
+  const w = window;
+
+  return (
+    countTruthy([
+      "buildID" in navigator,
+      "MozAppearance" in (document.documentElement?.style ?? {}),
+      "onmozfullscreenchange" in w,
+      "mozInnerScreenX" in w,
+      "CSSMozDocumentRule" in w,
+      "CanvasCaptureMediaStream" in w,
+    ]) >= 4
+  );
+}
+
+function countTruthy(values: unknown[]): number {
+  return values.reduce<number>((sum, value) => sum + (value ? 1 : 0), 0);
+}
