@@ -38,7 +38,7 @@ const deviceBaseNames = getPossibleAppleDeviceMdnsBaseNames();
 
 const initialValues: FormData = {
   countryCode: defaultCountryCode,
-  names: "",
+  names: nameMap[defaultCountryCode][defaultGender].join("\n"),
   gender: defaultGender,
   patterns: deviceBaseNames
     .flatMap((deviceName) => [
@@ -90,6 +90,9 @@ export function Form({
   advancedSettingsOpened = false,
 }: Props) {
   const form = useForm({ initialValues });
+  const [countryCode, setCountryCode] = useState(form.values.countryCode);
+  const [gender, setGender] = useState(form.values.gender);
+
   useLocalStorageFormCache(form, "user-form");
 
   const { classes } = useStyles();
@@ -99,10 +102,17 @@ export function Form({
   const toggleAdvancedSettings = () => setAdvancedSettings((state) => !state);
 
   useEffect(() => {
-    const { countryCode, gender } = form.values;
-    const newNames = nameMap[countryCode][gender].join("\n");
+    if (
+      form.values.countryCode !== countryCode ||
+      form.values.gender !== gender
+    ) {
+      const { countryCode, gender } = form.values;
+      const newNames = nameMap[countryCode][gender].join("\n");
 
-    form.setFieldValue("names", newNames);
+      form.setFieldValue("names", newNames);
+      setCountryCode(countryCode);
+      setGender(gender);
+    }
   }, [form.values.countryCode, form.values.gender]);
 
   return (
@@ -149,13 +159,13 @@ export function Form({
           {...form.getInputProps("detectionMethod")}
         >
           <Group mt="xs">
-            <Radio
-              value="fetch"
-              label="fetch"
-              description="Safari or Chromium"
-            />
+            <Radio value="fetch" label="fetch" description="Any browser" />
             <Radio value="webrtc" label="WebRTC" description="Chromium only" />
-            <Radio value="iframe" label="iframe" description="Firefox only" />
+            <Radio
+              value="iframe"
+              label="iframe"
+              description="Firefox / Chromium"
+            />
           </Group>
         </Radio.Group>
 

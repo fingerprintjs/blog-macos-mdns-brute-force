@@ -1,7 +1,7 @@
 import { ResolvedHostname, MDNSResolver } from "./types";
 
-const FETCH_CONCURRENCY_LIMIT = 50;
-const FETCH_RESOLVE_TIMEOUT = 700;
+const FETCH_CONCURRENCY_LIMIT = 15;
+const FETCH_RESOLVE_TIMEOUT = 500;
 
 export const resolveLocalHostnamesWithFetch: MDNSResolver = async (
   candidates,

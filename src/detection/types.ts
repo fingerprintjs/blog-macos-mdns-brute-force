@@ -12,6 +12,6 @@ export type MDNSCandidate = {
 export interface MDNSResolver {
   (
     candidates: MDNSCandidate[],
-    onCandidateFound?: (candidate: ResolvedHostname) => unknown
+    onCandidateFound: (candidate: ResolvedHostname) => unknown
   ): Promise<ResolvedHostname[]>;
 }
