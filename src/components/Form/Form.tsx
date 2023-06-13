@@ -108,11 +108,16 @@ export function Form({
       form.values.gender !== gender
     ) {
       const { countryCode, gender } = form.values;
-      const newNames = nameMap[countryCode][gender].join("\n");
+
+      const newNames = nameMap[countryCode]?.[gender]?.join("\n") ?? "";
 
       form.setFieldValue("names", newNames);
       setCountryCode(countryCode);
       setGender(gender);
+
+      if ((countryCode as string) === "other") {
+        setAdvancedSettings(true);
+      }
     }
   }, [form.values.countryCode, form.values.gender]);
 
@@ -121,10 +126,13 @@ export function Form({
       <Group>
         <NativeSelect
           label="Name Origin"
-          data={countryCodes.map((it) => ({
-            value: it,
-            label: `${nameMap[it].emoji} ${nameMap[it].name}`,
-          }))}
+          data={[
+            ...countryCodes.map((it) => ({
+              value: it,
+              label: `${nameMap[it].emoji} ${nameMap[it].name}`,
+            })),
+            { value: "other", label: "Other" },
+          ]}
           error={form.errors.countryCode}
           className={classes.primaryInput}
           {...form.getInputProps("countryCode")}
@@ -134,7 +142,6 @@ export function Form({
           data={[
             { value: "male_names", label: "🙎‍♂️ Male" },
             { value: "female_names", label: "🙎‍♀️ Female" },
-            { value: "neutral", label: "👤 Neutral", disabled: true },
           ]}
           className={classes.primaryInput}
           error={form.errors.gender}

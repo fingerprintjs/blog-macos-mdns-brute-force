@@ -196,6 +196,17 @@ export default function App() {
           <Image src="./sharing-settings.png" width="700px" />
         </center>
 
+        <Text size="lg" className={classes.description}>
+          Sometimes detection results may be affected by the{" "}
+          <strong>network configuration</strong>. <br />
+          Please check if your <strong>Firewall</strong> is disabled and your
+          device hostname can be resolved.
+        </Text>
+
+        <center>
+          <Image src="./terminal.png" width="700px" />
+        </center>
+
         <Space h="40px" />
         <Title size="h2" mb="lg" align="center">
           Try Again
