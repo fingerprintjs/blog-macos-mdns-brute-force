@@ -32,6 +32,10 @@ export type FormData = {
 
 const countryCodes = Object.keys(nameMap) as CountryCode[];
 
+countryCodes.sort((left, right) =>
+  nameMap[left].name.localeCompare(nameMap[right].name)
+);
+
 const defaultCountryCode = "US";
 const defaultGender = "male_names";
 const deviceBaseNames = getPossibleAppleDeviceMdnsBaseNames();
