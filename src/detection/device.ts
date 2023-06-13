@@ -19,7 +19,7 @@ export function getPossibleAppleDeviceMdnsBaseNames(): string[] {
       return ["imac"];
 
     default:
-      return ["macbook-pro", "macbook-air", "imac", "mac-mini", "mac"];
+      return ["macbook-pro", "macbook-air"];
   }
 }
 

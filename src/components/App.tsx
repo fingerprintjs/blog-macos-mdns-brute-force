@@ -43,14 +43,14 @@ export default function App() {
   const handleSubmit = useCallback(
     async (data: FormData) => {
       const patterns = data.patterns.split("\n");
-      const names = data.names.split("\n");
+      const names = Array.from(new Set(data.names.split("\n")));
 
       const mdnsCandidates: MDNSCandidate[] = patterns.flatMap((pattern) =>
         pattern.includes(NAME_PLACEHOLDER_TOKEN)
           ? names.map((name) => ({
               firstName: name,
               hostname: pattern
-                .replaceAll(NAME_PLACEHOLDER_TOKEN, name)
+                .replaceAll(NAME_PLACEHOLDER_TOKEN, name.replaceAll(" ", "-"))
                 .toLowerCase(),
             }))
           : { hostname: pattern.toLowerCase() }
