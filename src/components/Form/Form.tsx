@@ -27,7 +27,7 @@ export type FormData = {
   names: string;
   patterns: string;
   gender: "male_names" | "female_names";
-  detectionMethod: "fetch" | "webrtc" | "iframe";
+  detectionMethod: "fetch" | "iframe";
 };
 
 const countryCodes = Object.keys(nameMap) as CountryCode[];
@@ -45,6 +45,7 @@ const initialValues: FormData = {
       `${NAME_PLACEHOLDER_TOKEN}s-${deviceName}.local`,
       `${deviceName}-${NAME_PLACEHOLDER_TOKEN}.local`,
       `${deviceName}.local`,
+      `${deviceName}-2.local`,
     ])
     .join("\n"),
   detectionMethod: isGecko() ? "iframe" : "fetch",
@@ -160,11 +161,10 @@ export function Form({
         >
           <Group mt="xs">
             <Radio value="fetch" label="fetch" description="Any browser" />
-            <Radio value="webrtc" label="WebRTC" description="Chromium only" />
             <Radio
               value="iframe"
               label="iframe"
-              description="Firefox / Chromium"
+              description="Firefox or Chromium"
             />
           </Group>
         </Radio.Group>
@@ -174,6 +174,7 @@ export function Form({
           w="516px"
           mt="xl"
           label="mDNS Patterns"
+          description="Automatically assigned based on your screen resolution."
           placeholder="<name>-macbook-pro.local"
           {...form.getInputProps("patterns")}
         />

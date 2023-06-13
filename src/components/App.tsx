@@ -102,7 +102,7 @@ export default function App() {
                   withBorder
                   key={it.hostname}
                 >
-                  Ping: {it.ping}ms
+                  Ping: {it.ping.toFixed(0)}ms
                 </Notification>
               ))}
             </Container>
