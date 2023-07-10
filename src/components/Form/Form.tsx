@@ -19,6 +19,7 @@ import {
   isGecko,
 } from "../../detection/device";
 import { useEffect, useState } from "react";
+import { getCountryFromTimezone } from "../../detection/country";
 
 export const NAME_PLACEHOLDER_TOKEN = "<name>";
 export type CountryCode = keyof typeof nameMap;
@@ -36,7 +37,9 @@ countryCodes.sort((left, right) =>
   nameMap[left].name.localeCompare(nameMap[right].name)
 );
 
-const defaultCountryCode = "US";
+const countryCode = getCountryFromTimezone();
+const defaultCountryCode =
+  countryCode in nameMap ? (countryCode as keyof typeof nameMap) : "US";
 const defaultGender = "male_names";
 const deviceBaseNames = getPossibleAppleDeviceMdnsBaseNames();
 
@@ -49,7 +52,6 @@ const initialValues: FormData = {
       `${NAME_PLACEHOLDER_TOKEN}s-${deviceName}.local`,
       `${deviceName}-${NAME_PLACEHOLDER_TOKEN}.local`,
       `${deviceName}.local`,
-      `${deviceName}-2.local`,
     ])
     .join("\n"),
   detectionMethod: isGecko() ? "iframe" : "fetch",

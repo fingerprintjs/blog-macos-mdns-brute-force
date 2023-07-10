@@ -1,5 +1,10 @@
 export function getPossibleAppleDeviceMdnsBaseNames(): string[] {
   const key = `${window.screen.width}x${window.screen.height}`;
+
+  if ((window.screen as any).isExtended) {
+    return ["imac", "macbook-pro", "macbook-air"];
+  }
+
   switch (key) {
     case "1366x768": // 11 inch
       return ["macbook-air"];
@@ -19,7 +24,7 @@ export function getPossibleAppleDeviceMdnsBaseNames(): string[] {
       return ["imac"];
 
     default:
-      return ["macbook-pro", "macbook-air"];
+      return ["imac", "mac-mini"];
   }
 }
 

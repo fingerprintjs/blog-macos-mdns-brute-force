@@ -14,7 +14,8 @@ import { MDNSCandidate, ResolvedHostname } from "../detection/types";
 import { Form, FormData, NAME_PLACEHOLDER_TOKEN } from "./Form/Form";
 import { mdnsResolvers } from "../detection";
 import { Wrapper } from "./Wrapper/Wrapper";
-import { IconAccessPoint } from "@tabler/icons-react";
+import { IconAccessPoint, IconDevicesPc } from "@tabler/icons-react";
+import { BLOG_ARTICLE_LINK, Header } from "./Header/Header";
 
 const useStyles = createStyles((theme) => ({
   title: {
@@ -34,6 +35,7 @@ const useStyles = createStyles((theme) => ({
 
 export default function App() {
   const { classes } = useStyles();
+  const isMobile = window.screen.width < 600;
 
   const [isProcessing, setProcessing] = useState(false);
   const [detectedNames, setDetectedNames] = useState<null | ResolvedHostname[]>(
@@ -118,124 +120,159 @@ export default function App() {
     const [first] = detectedNames;
 
     return (
-      <Wrapper>
-        {first ? (
-          <>
-            <Title
-              className={classes.title}
-              size="xs"
-              variant="gradient"
-              gradient={{ from: "blue", to: "cyan" }}
-              inherit
-              mb="lg"
-            >
-              Are you {first.firstName}?
-            </Title>
-
-            <Container p={0} size={400}>
-              <Text
-                size="lg"
-                mb="xl"
-                color="dimmed"
-                className={classes.description}
+      <>
+        <Wrapper>
+          {first ? (
+            <>
+              <Title
+                className={classes.title}
+                size="xs"
+                variant="gradient"
+                gradient={{ from: "blue", to: "cyan" }}
+                inherit
+                mb="lg"
               >
-                Based on the list of hostnames resolved <br /> in your local
-                network:
-              </Text>
+                Are you {first.firstName}?
+              </Title>
 
-              {detectedNames.map((it) => (
-                <Notification
-                  mb="sm"
-                  title={it.hostname}
-                  icon={<IconAccessPoint />}
-                  withCloseButton={false}
-                  withBorder
-                  key={it.hostname}
+              <Container p={0} size={400}>
+                <Text
+                  size="lg"
+                  mb="xl"
+                  color="dimmed"
+                  className={classes.description}
                 >
-                  Ping: {it.ping}ms
-                </Notification>
-              ))}
-            </Container>
-          </>
-        ) : (
-          <>
-            <Title
-              className={classes.title}
-              size="xs"
-              variant="gradient"
-              gradient={{ from: "blue", to: "cyan" }}
-              inherit
-              mb="lg"
-            >
-              We Could Not Detect Your Name
-            </Title>
+                  Based on the list of hostnames resolved <br /> in your local
+                  network:
+                </Text>
 
-            <Container p={0} size={700}>
-              <Text
-                size="lg"
-                mb="xl"
-                color="dimmed"
-                className={classes.description}
+                {detectedNames.map((it) => (
+                  <Notification
+                    mb="sm"
+                    title={it.hostname}
+                    icon={<IconAccessPoint />}
+                    withCloseButton={false}
+                    withBorder
+                    key={it.hostname}
+                  >
+                    Ping: {it.ping}ms
+                  </Notification>
+                ))}
+              </Container>
+            </>
+          ) : (
+            <>
+              <Title
+                className={classes.title}
+                size="xs"
+                variant="gradient"
+                gradient={{ from: "blue", to: "cyan" }}
+                inherit
+                mb="lg"
               >
-                This probably means that your name is rare or your network
-                configuration does not support MDNS. Consider configuring the
-                demo with advanced settings and running it again.
-              </Text>
-            </Container>
-          </>
-        )}
+                We Could Not Detect Your Name
+              </Title>
 
-        <Space h="80px" />
+              <Container p={0} size={700}>
+                <Text
+                  size="lg"
+                  mb="xl"
+                  color="dimmed"
+                  className={classes.description}
+                >
+                  This probably means that your name is rare or your network
+                  configuration does not support MDNS. Consider configuring the
+                  demo with advanced settings and running it again.
+                </Text>
+              </Container>
+            </>
+          )}
 
-        <Text size="lg" className={classes.description}>
-          To check your local hostname open <strong>System Preferences</strong>{" "}
-          and go to the <strong>Sharing</strong> section:
-        </Text>
+          <Space h="80px" />
 
-        <center>
-          <Image src="./sharing-settings.png" width="700px" />
-        </center>
+          <Text size="lg" className={classes.description}>
+            To check your local hostname open{" "}
+            <strong>System Preferences</strong> and go to the{" "}
+            <strong>Sharing</strong> section:
+          </Text>
 
-        <Text size="lg" className={classes.description}>
-          Sometimes detection results may be affected by the{" "}
-          <strong>network configuration</strong>. <br />
-          Please check if your <strong>Firewall</strong> is disabled and your
-          device hostname can be resolved.
-        </Text>
+          <center>
+            <Image src="./sharing-settings.png" width="700px" />
+          </center>
 
-        <center>
-          <Image src="./terminal.png" width="700px" />
-        </center>
+          <Text size="lg" className={classes.description}>
+            Sometimes detection results may be affected by the{" "}
+            <strong>network configuration</strong>. <br />
+            Please check if your <strong>Firewall</strong> is disabled and your
+            device hostname can be resolved.
+          </Text>
 
-        <Space h="40px" />
-        <Title size="h2" mb="lg" align="center">
-          Try Again
-        </Title>
+          <center>
+            <Image src="./terminal.png" width="700px" />
+          </center>
 
-        <Form
-          isLoading={isProcessing}
-          onSubmit={handleSubmit}
-          advancedSettingsOpened
-        />
-      </Wrapper>
+          <Space h="40px" />
+          <Title size="h2" mb="lg" align="center">
+            Try Again
+          </Title>
+
+          <Form
+            isLoading={isProcessing}
+            onSubmit={handleSubmit}
+            advancedSettingsOpened
+          />
+        </Wrapper>
+
+        <Header />
+      </>
     );
   }
 
   return (
-    <Wrapper>
-      <Title className={classes.title} mb="lg">
-        Can I Guess Your Name?
-      </Title>
+    <>
+      {" "}
+      <Wrapper>
+        <Title className={classes.title} mb="lg">
+          Can I Guess Your Name?
+        </Title>
 
-      <Container p={0} size={600}>
-        <Text size="lg" mb="xl" color="dimmed" className={classes.description}>
-          This interactive demo site illuminates how the mDNS protocol can
-          potentially be exploited in a web browser to uncover sensitive user
-          information such as their first name.
-        </Text>
-      </Container>
+        <Container p={0} size={600}>
+          <Text
+            size="lg"
+            mb="xl"
+            color="dimmed"
+            className={classes.description}
+          >
+            This demo illustrates how the mDNS protocol can be exploited in a
+            web browser to reveal macOS user's first name.{" "}
+            <a
+              href={BLOG_ARTICLE_LINK}
+              style={{ color: "#228be6" }}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Learn more
+            </a>
+            .
+          </Text>
 
-      <Form isLoading={false} onSubmit={handleSubmit} />
-    </Wrapper>
+          <Notification
+            icon={<IconDevicesPc size="1.3rem" />}
+            color="yellow"
+            withCloseButton={false}
+            withBorder
+            w={500}
+            maw="100%"
+            m="0 auto 40px"
+          >
+            The demo works only for devices running <strong>MacOS</strong>, such
+            as Macbook or iMac
+          </Notification>
+        </Container>
+
+        {!isMobile && <Form isLoading={false} onSubmit={handleSubmit} />}
+      </Wrapper>
+      <Header />
+    </>
   );
 }
