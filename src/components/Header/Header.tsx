@@ -1,8 +1,10 @@
 import { Group } from "@mantine/core";
 import React from "react";
 
-export const BLOG_ARTICLE_LINK = "https://fingerprint.com/blog/";
-export const SOURCE_CODE_LINK = "https://fingerprint.com/blog/";
+export const BLOG_ARTICLE_LINK =
+  "https://fingerprint.com/blog/apple-macos-mdns-brute-force/";
+export const SOURCE_CODE_LINK =
+  "https://github.com/fingerprintjs/blog-macos-mdns-brute-force";
 
 export function Header() {
   return (
